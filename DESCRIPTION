@@ -1,0 +1,16 @@
+Package: predhy
+Type: Package
+Title: Genomic Prediction of Hybrid Performance
+Version: 0.1.0
+Author: Yang Xu, Yanru Cui, Shizhong Xu, Chenwu Xu
+Maintainer: Yang Xu <xuyang_89@126.com>
+Description: Performs genomic prediction of hybrid performance with genomic best linear unbiased prediction (Xu S et al (2014) <doi:10.1073/pnas.1413750111>). The package also provides fast cross-validation and mating design for training population (Xu S et al (2016) <doi:10.1111/tpj.13242>; Xu S (2017) <doi:10.1534/g3.116.038059>). 
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Depends: R (>= 2.10)
+NeedsCompilation: no
+Packaged: 2019-10-31 08:19:35 UTC; xuyang
+Repository: CRAN
+Date/Publication: 2019-11-04 16:30:10 UTC
