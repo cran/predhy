@@ -41,6 +41,8 @@ cv_fast <- function(fix = NULL, y, kk, nfold = 5, seed = 123) {
   y <- as.matrix(y)
   if (is.null(fix)) {
     fix <- matrix(1, n, 1)
+  } else {
+    fix <- as.matrix(fix)
   }
   ### Negative nloglikelihood Function
   g <- length(kk)
@@ -60,8 +62,6 @@ cv_fast <- function(fix = NULL, y, kk, nfold = 5, seed = 123) {
   parm0 <- rep(1, g + 1)
   parm <- optim(par = parm0, fn = nloglik_REML, method = "L-BFGS-B", hessian = FALSE,
                 lower = 0)
-  if (parm$convergence != 0)
-    stop("optim() failed to converge")
   v_phi <- 0
   for (p in 1:g) {
     v_phi <- v_phi + kk[[p]] * parm$par[p]

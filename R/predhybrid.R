@@ -51,6 +51,7 @@ predhybrid <- function(inbred_gen, hybrid_phe, predparent_gen = inbred_gen, fix 
     kd21 <- NULL
     phe_name <- NULL
     pred_name <- row.names(predparent_gen)
+    predparent_gen<-as.matrix(predparent_gen)
     for (i in 1:(nrow(predparent_gen) - 1)) {
       ha1 <- (predparent_gen[i, ] + predparent_gen[-(1:i), ])/2
       ka2 <- tcrossprod(ha1, gena)/ncol(gena)

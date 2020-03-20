@@ -39,7 +39,7 @@ cv <- function(fix = NULL, y, kk, nfold = 5, seed = 123) {
   if (is.null(fix)) {
     fix <- matrix(1, n, 1)
   } else {
-    fix <- as.matrix()
+    fix <- as.matrix(fix)
   }
   set.seed(seed)
   foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
