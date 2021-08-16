@@ -4,7 +4,9 @@
 \name{input_geno1}
 \alias{input_geno1}
 \title{Genotype in Numeric Format}
-\format{A data frame with 1000 rows and 50 variables.}
+\format{
+A data frame with 1000 rows and 50 variables.
+}
 \usage{
 input_geno1
 }

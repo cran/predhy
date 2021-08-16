@@ -4,8 +4,12 @@
 \alias{convertgen}
 \title{Convert Genotype}
 \usage{
-convertgen(input_geno, type = c("hmp1", "hmp2", "num"),
-  missingrate = 0.05, impute = TRUE)
+convertgen(
+  input_geno,
+  type = c("hmp1", "hmp2", "num"),
+  missingrate = 0.05,
+  impute = TRUE
+)
 }
 \arguments{
 \item{input_geno}{genotype in HapMap format or in numeric format. The names of individuals should be provided. Missing (NA) values are allowed.}

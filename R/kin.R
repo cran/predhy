@@ -10,7 +10,7 @@
 #' gen <- matrix(rep(0,100*1000),100,1000)
 #' gen <- apply(gen,2,function(x){x <- sample(c(-1,0,1), 100, replace = TRUE)})
 #'
-#' ## generate 100 × 100 kinship matrix
+#' ## generate 100*100 kinship matrix
 #' k <- kin(gen)
 #'
 kin <- function(gen) {

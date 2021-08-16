@@ -4,12 +4,14 @@
 \name{hybrid_phe}
 \alias{hybrid_phe}
 \title{Phenotypic data of hybrids}
-\format{A data frame with 410 rows and 3 variables:
+\format{
+A data frame with 410 rows and 3 variables:
 \describe{
   \item{\code{M}}{The names of male parents.}
   \item{\code{F}}{The names of female parents.}
   \item{\code{GY}}{The grain yield of hybrids.}
-}}
+}
+}
 \usage{
 hybrid_phe
 }

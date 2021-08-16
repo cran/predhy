@@ -4,7 +4,9 @@
 \name{input_geno}
 \alias{input_geno}
 \title{Genotype in Hapmap Format}
-\format{A data frame with 4979 rows and 359 columns.}
+\format{
+A data frame with 4979 rows and 359 columns.
+}
 \usage{
 input_geno
 }

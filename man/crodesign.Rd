@@ -25,8 +25,8 @@ Generate a mating design for a subset of crosses based on a balanced random part
 
 ## generate a mating design with 100 male parents and 150 female parents
 ## for 1/d = 1/50 percentage of crosses to be evaluated in the field.
-## the total number of potential crosses is 100 × 150 = 15000.
-## The number of crosses to be field evaluated is 15000 × (1/50) = 300.
+## the total number of potential crosses is 100*150 = 15000.
+## The number of crosses to be field evaluated is 15000*(1/50) = 300.
 
 male_name <- paste("m", 1:100, sep = "")
 female_name <- paste("f", 1:150, sep = "")
