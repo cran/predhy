@@ -7,7 +7,8 @@
 convertgen(
   input_geno,
   type = c("hmp1", "hmp2", "num"),
-  missingrate = 0.05,
+  missingrate = 0.2,
+  maf = 0.05,
   impute = TRUE
 )
 }
@@ -16,7 +17,9 @@ convertgen(
 
 \item{type}{the type of genotype. There are three options: "hmp1" for genotypes in HapMap format with single bit, "hmp2" for genotypes in HapMap format with double bit, and "num" for genotypes in numeric format.}
 
-\item{missingrate}{max missing percentage for each SNP, default is 0.05.}
+\item{missingrate}{max missing percentage for each SNP, default is 0.2.}
+
+\item{maf}{minor allele frequency for each SNP, default is 0.05.}
 
 \item{impute}{logical. If TRUE, imputation. Default is TRUE.}
 }

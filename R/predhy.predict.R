@@ -32,7 +32,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
         "LASSO") | (method == "GBLUP") | (method == "RKHS") | (method == "RF") |
         (method == "EN")) {
         if (method == "PLS") {
-            predict.pls <- function(inbred_gen, hybrid_phe, model = "NULL") {
+            predict.pls <- function(inbred_gen, hybrid_phe, model = NULL) {
                 if (!requireNamespace("pls", quietly = TRUE)) {
                   stop("pls needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -90,7 +90,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by PLS...ended.")
         }
         if (method == "XGBOOST") {
-            predict.xgboost <- function(inbred_gen, hybrid_phe,model = "NULL") {
+            predict.xgboost <- function(inbred_gen, hybrid_phe,model = NULL) {
                 if (!requireNamespace("xgboost", quietly = TRUE)) {
                   stop("xgboost needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -146,7 +146,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by XGBOOST...ended")
         }
         if (method == "BayesB") {
-            predict.bayesb <- function(inbred_gen, hybrid_phe,model = "NULL") {
+            predict.bayesb <- function(inbred_gen, hybrid_phe,model = NULL) {
                 if (!requireNamespace("BGLR", quietly = TRUE)) {
                   stop("BGLR needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -214,7 +214,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by BayesB ...ended")
         }
         if (method == "LASSO") {
-            predict.lasso <- function(inbred_gen, hybrid_phe,model = "NULL") {
+            predict.lasso <- function(inbred_gen, hybrid_phe,model = NULL) {
                 if (!requireNamespace("glmnet", quietly = TRUE)) {
                   stop("glmnet needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -274,7 +274,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by LASSO ...ended")
         }
         if (method == "RF") {
-            predict.rf <- function(inbred_gen, hybrid_phe,model = "NULL") {
+            predict.rf <- function(inbred_gen, hybrid_phe,model = NULL) {
                 if (!requireNamespace("randomForest", quietly = TRUE)) {
                   stop("randomForest needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -330,7 +330,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by RF ...ended")
         }
         if (method == "EN") {
-            predict.EN <- function(inbred_gen, hybrid_phe,model = "NULL") {
+            predict.EN <- function(inbred_gen, hybrid_phe,model = NULL) {
                 # library(glmnet)
                 predparent_gen <- t(inbred_gen)
                 pred_name <- colnames(predparent_gen)
@@ -386,7 +386,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by EN ...ended")
         }
         if (method == "GBLUP") {
-            predict.GBLUP <- function(fix = NULL, fixnew = NULL, inbred_gen, hybrid_phe, model = "NULL") {
+            predict.GBLUP <- function(fix = NULL, fixnew = NULL, inbred_gen, hybrid_phe, model = NULL) {
                 n <- nrow(hybrid_phe)
                 if (model == "AD") {
                   gena <- infergen(inbred_gen, hybrid_phe)[[1]]
@@ -482,7 +482,7 @@ predhy.predict <- function(inbred_gen, hybrid_phe, method = "GBLUP", model = "A"
             print("Predict by GBLUP ...ended")
         }
         if (method == "RKHS") {
-            predict.rkhsmk <- function(inbred_gen,hybrid_phe,model = "NULL") {
+            predict.rkhsmk <- function(inbred_gen,hybrid_phe,model = NULL) {
                 # library(BGLR)
                 predparent_gen <- t(inbred_gen)
                 pred_name <- colnames(predparent_gen)
