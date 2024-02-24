@@ -6,7 +6,7 @@
 #' @importFrom BGLR BGLR
 #' @importFrom glmnet cv.glmnet glmnet 
 #' @importFrom xgboost xgboost 
-#' @importFrom randomForest randomForest 
+#' @importFrom lightgbm lgb.Dataset lgb.train 
 #' @importFrom doParallel registerDoParallel
 #' @importFrom parallel detectCores makeCluster stopCluster
 #' @importFrom foreach %dopar% foreach

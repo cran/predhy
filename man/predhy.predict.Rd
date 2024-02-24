@@ -7,6 +7,7 @@
 predhy.predict(
   inbred_gen,
   hybrid_phe,
+  inbred_phe = NULL,
   method = "GBLUP",
   model = "A",
   select = "top",
@@ -19,10 +20,12 @@ predhy.predict(
 \item{hybrid_phe}{a data frame with three columns. The first column and the second column are the names of male and female parents of the corresponding hybrids, respectively; the third column is the phenotypic values of hybrids.
 The names of male and female parents must match the rownames of inbred_gen. Missing (NA) values are not allowed.}
 
-\item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBOOST", "RF".
-Users may select one of these methods. Default is "GBLUP".}
+\item{inbred_phe}{a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.}
 
-\item{model}{the prediction model. There are two options: model = "A" for the additive model, model = "AD" for the additive-dominance model. Default is model = "A".}
+\item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM".
+Users may select P of these methods. Default is "GBLUP".}
+
+\item{model}{the prediction model. There are four options: model = "A" for the additive model, model = "AD" for the additive-dominance model,model = "A-P" for the additive-phenotypic model,model = "AD-P" for the additive-dominance-phenotypic model. Default is model = "A".}
 
 \item{select}{the selection of hybrids based on the prediction results. There are three options: select = "all", which selects all potential crosses. select = "top", which selects the top n crosses. select = "bottom", which selects the bottom n crosses. The n is determined by the param number.}
 

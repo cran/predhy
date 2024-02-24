@@ -4,8 +4,9 @@
 #' @param fix a design matrix of the fixed effects.
 #' @param gena a matrix (n x m) of additive genotypes for the training population.
 #' @param gend a matrix (n x m) of domiance genotypes for the training population. Default is NULL.
+#' @param inbred_phe a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.
 #' @param y a vector(n x 1) of the phenotypic values.
-#' @param method eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBOOST", "RF".
+#' @param method eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost","LightGBM".
 #' Users may select one of these methods or all of them simultaneously with "ALL". Default is "GBLUP".
 #' @param drawplot when method ="ALL", user may select TRUE for a barplot about eight GS methods. Default is TRUE.
 #' @param nfold the number of folds. Default is 5.
@@ -27,24 +28,31 @@
 #' gend <- infergen(inbred_gen, hybrid_phe)$dom
 #'
 #' ##additive model
-#' R2<-cv(fix=NULL,gena,gend=NULL,y=hybrid_phe[,3],method ="GBLUP",nfold=5,nTimes=1,seed=1234,CPU=1)
+#' R2<-cv(fix=NULL,gena,gend=NULL,y=hybrid_phe[,3],inbred_phe=NULL,method ="GBLUP")
 #'
 #' ##additive-dominance model
-#' R2<-cv(fix=NULL,gena,gend,y=hybrid_phe[,3],method ="GBLUP",nfold=5,nTimes=1,seed=1234,CPU=1)}
+#' R2<-cv(fix=NULL,gena,gend,y=hybrid_phe[,3],inbred_phe=NULL,method ="GBLUP")}
 #' @export
-cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = TRUE,
-          nfold = 5, nTimes = 1, seed = 1234, CPU = 1) 
+cv <- function (fix = NULL, gena, gend = NULL,inbred_phe=NULL, y, method = "GBLUP", drawplot = TRUE,
+                 nfold = 5, nTimes = 1, seed = 1234, CPU = 1) 
 {
-  cv.GBLUP <- function(fix, gena, gend, y, nfold, seed, CPU) {
+  cv.GBLUP <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
     print("Predict by GBLUP...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
-    if (is.null(gend)) {
+    if (is.null(gend)&is.null(inbred_phe)) {
       kk <- list(kin(gena))
+    } 
+    else if (is.null(gend)){
+      kk <- list(kin(gena),kin(inbred_phe))
+    } 
+    else if(is.null(inbred_phe)){
+      kk <- list(kin(gena),kin(gend))
     }
-    else {
-      kk <- list(kin(gena), kin(gend))
+    else{
+      kk <- list(kin(gena),kin(gend),kin(inbred_phe))
     }
+    
     n <- length(y)
     y <- as.matrix(y)
     if (is.null(fix)) {
@@ -94,7 +102,7 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
                      v_i <- parm$v_i
                      beta <- parm$beta
                      y3 <- x2 %*% beta + G21 %*% v_i %*% (y1 - x1 %*% 
-                                                            beta)
+                                                          beta)
                      yobs <- y2
                      yhat <- y3
                      data.frame(yobs, yhat)
@@ -104,7 +112,7 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     print("Predict by GBLUP...ended.")
     return(R2)
   }
-  cv.bayesb <- function(fix, gena, gend, y, nfold, seed, CPU) {
+  cv.bayesb <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
     print("Predict by BayesB...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
@@ -112,12 +120,7 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
       stop("BGLR needed for this function to work. Please install it.", 
            call. = FALSE)
     }
-    if (is.null(gend)) {
-      x <- gena
-    }
-    else {
-      x <- cbind(gena, gend)
-    }
+    
     if (is.null(fix)) {
       fix <- matrix(1, n, 1)
     }
@@ -145,7 +148,19 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
                      yNa <- y
                      whichNa <- which(foldid == k)
                      yNa[whichNa] <- NA
-                     eta <- list(list(X = fix, model = "FIXED"),list(X = x, model = "BayesB"))
+                     if (is.null(gend)&is.null(inbred_phe)) {
+                       eta <- list(list(X = fix, model = "FIXED"),list(X = gena, model = "BayesB"))
+                     } 
+                     else if (is.null(gend)){
+                       eta <- list(list(X = fix, model = "FIXED"),list(X = gena, model = "BayesB"),list(X = inbred_phe, model = "BayesB"))
+                       
+                     } 
+                     else if(is.null(inbred_phe)){
+                       eta <- list(list(X = fix, model = "FIXED"),list(X = gena, model = "BayesB"),list(X = gend, model = "BayesB"))
+                     }
+                     else{
+                       eta <- list(list(X = fix, model = "FIXED"),list(X = gena, model = "BayesB"),list(X = gend, model = "BayesB"),list(X = inbred_phe, model = "BayesB"))
+                     } 
                      fm <- BGLR(y = yNa, ETA = eta, verbose = F)
                      yhat <- fm$yHat[whichNa]
                      yobs <- y[whichNa]
@@ -156,28 +171,42 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     print("Predict by BayesB...ended.")
     return(pr2)
   }
-  cv.rkhsmk <- function(fix, gena, gend, y, nfold, seed, CPU) {
+  cv.rkhsmk <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
     print("Predict by RKHS...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
-    if (is.null(gend)) {
-      x <- gena
-    }
-    else {
-      x <- cbind(gena, gend)
-    }
+    
     if (is.null(fix)) {
       fix <- matrix(1, n, 1)
     }
     else {
       fix <- as.matrix(fix)
     }
-    X <- scale(x, center = TRUE, scale = TRUE)
+    X <- scale(gena, center = TRUE, scale = TRUE)
     D <- (as.matrix(dist(X, method = "euclidean"))^2)/ncol(X)
     h <- 0.5 * c(1/5, 1, 5)
-    ETA <- list(list(K = exp(-h[1] * D), model = "RKHS"), 
-                list(K = exp(-h[2] * D), model = "RKHS"), list(K = exp(-h[3] * 
-                                                                         D), model = "RKHS"), list(X = fix, model = "FIXED"))
+    if (is.null(gend)&is.null(inbred_phe)) {
+      ETA <- list(list(K = exp(-h[1] * D), model = "RKHS"), 
+                list(K = exp(-h[2] * D), model = "RKHS"), list(K = exp(-h[3] * D), model = "RKHS"),list(X = fix, model = "FIXED"))
+    } 
+    else if (is.null(gend)){
+      ETA <- list(list(K = exp(-h[1] * D), model = "RKHS"), 
+                  list(K = exp(-h[2] * D), model = "RKHS"), list(K = exp(-h[3] * D), model = "RKHS"), list(X = inbred_phe, model = "BayesB"),list(X = fix, model = "FIXED"))
+    } 
+    else if(is.null(inbred_phe)){
+      X1 <- scale(gend, center = TRUE, scale = TRUE)
+      D1 <- (as.matrix(dist(X1, method = "euclidean"))^2)/ncol(X1)
+      ETA <- list(list(K = exp(-h[1] * D), model = "RKHS"), 
+                  list(K = exp(-h[2] * D), model = "RKHS"), list(K = exp(-h[3] * D), model = "RKHS"),list(K = exp(-h[1] * D1), model = "RKHS"), 
+                  list(K = exp(-h[2] * D1), model = "RKHS"), list(K = exp(-h[3] * D1), model = "RKHS"),list(X = fix, model = "FIXED"))
+    }
+    else{
+      X1 <- scale(gend, center = TRUE, scale = TRUE)
+      D1 <- (as.matrix(dist(X1, method = "euclidean"))^2)/ncol(X1)
+      ETA <- list(list(K = exp(-h[1] * D), model = "RKHS"), 
+                  list(K = exp(-h[2] * D), model = "RKHS"), list(K = exp(-h[3] * D), model = "RKHS"),list(K = exp(-h[1] * D1), model = "RKHS"), 
+                  list(K = exp(-h[2] * D1), model = "RKHS"), list(K = exp(-h[3] * D1), model = "RKHS"), list(X = inbred_phe, model = "BayesB"),list(X = fix, model = "FIXED"))
+    }
     yhat <- NULL
     yobs <- NULL
     cl.cores <- detectCores()
@@ -209,7 +238,7 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     print("Predict by RKHS...ended.")
     return(pr2)
   }
-  cv.pls <- function(fix, gena, gend, y, nfold, seed, CPU) {
+  cv.pls <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
     print("Predict by PLS...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
@@ -217,11 +246,18 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
       stop("pls needed for this function to work. Please install it.", 
            call. = FALSE)
     }
-    if (is.null(gend)) {
+    
+    if (is.null(gend)&is.null(inbred_phe)) {
       x <- gena
+    } 
+    else if (is.null(gend)){
+      x <- cbind(gena,inbred_phe)
+    } 
+    else if(is.null(inbred_phe)){
+      x <- cbind(gena,gend)
     }
-    else {
-      x <- cbind(gena, gend)
+    else{
+      x <- cbind(gena,gend,inbred_phe)
     }
     z <- cbind(fix, x)
     yp <- NULL
@@ -261,7 +297,7 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     print("Predict by PLS...ended.")
     return(pr2)
   }
-  cv.lasso <- function(fix, gena, gend, y, nfold, seed, CPU) {
+  cv.lasso <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
     print("Predict by LASSO...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
@@ -269,11 +305,18 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
       stop("glmnet needed for this function to work. Please install it.", 
            call. = FALSE)
     }
-    if (is.null(gend)) {
+    
+    if (is.null(gend)&is.null(inbred_phe)) {
       x <- gena
+    } 
+    else if (is.null(gend)){
+      x <- cbind(gena,inbred_phe)
+    } 
+    else if(is.null(inbred_phe)){
+      x <- cbind(gena,gend)
     }
-    else {
-      x <- cbind(gena, gend)
+    else{
+      x <- cbind(gena,gend,inbred_phe)
     }
     z <- cbind(fix, x)
     yyhat <- NULL
@@ -310,15 +353,22 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     print("Predict by LASSO...ended.")
     return(pr2)
   }
-  cv.elas <- function(fix, gena, gend, y, nfold, seed, CPU) {
+  cv.elas <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
     print("Predict by EN...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
-    if (is.null(gend)) {
+    
+    if (is.null(gend)&is.null(inbred_phe)) {
       x <- gena
+    } 
+    else if (is.null(gend)){
+      x <- cbind(gena,inbred_phe)
+    } 
+    else if(is.null(inbred_phe)){
+      x <- cbind(gena,gend)
     }
-    else {
-      x <- cbind(gena, gend)
+    else{
+      x <- cbind(gena,gend,inbred_phe)
     }
     z <- cbind(fix, x)
     yyhat <- NULL
@@ -355,19 +405,25 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     print("Predict by EN...ended.")
     return(pr2)
   }
-  cv.xgboost <- function(fix, gena, gend, y, nfold, seed, CPU) {
-    print("Predict by XGBOOST...")
+  cv.xgboost <- function(fix, gena, gend,inbred_phe, y, nfold, seed, CPU) {
+    print("Predict by XGBoost...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
     if (!requireNamespace("xgboost", quietly = TRUE)) {
       stop("xgboost needed for this function to work. Please install it.", 
            call. = FALSE)
     }
-    if (is.null(gend)) {
+    if (is.null(gend)&is.null(inbred_phe)) {
       x <- gena
+    } 
+    else if (is.null(gend)){
+      x <- cbind(gena,inbred_phe)
+    } 
+    else if(is.null(inbred_phe)){
+      x <- cbind(gena,gend)
     }
-    else {
-      x <- cbind(gena, gend)
+    else{
+      x <- cbind(gena,gend,inbred_phe)
     }
     z <- cbind(fix, x)
     yp <- NULL
@@ -394,8 +450,13 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
                      x2 <- z[id2, ]
                      y1 <- y[id1]
                      y2 <- y[id2]
-                     xg <- xgboost(data = x1, label = y1, nrounds = 1000, 
-                                   eta = 0.07)
+                     xg <- xgboost(data = x1, label = y1,
+                                   colsample_bytree=0.9,
+                                   eta=0.02,
+                                   min_child_weight=11,
+                                   nrounds=1150,
+                                   subsample=0.8,
+                                   set.seed(123),verbose = FALSE)
                      yhat <- predict(xg, x2)
                      yp <- yhat
                      yo <- y2
@@ -403,24 +464,31 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
                    }
     stopCluster(cl)
     pr2 <- cor(res$yo, res$yp)^2
-    print("Predict by XGBOOST...ended.")
+    print("Predict by XGBoost...ended.")
     return(pr2)
   }
-  cv.rf <- function(fix, gena, gend, y, nfold, seed, CPU) {
-    print("Predict by RF...")
+  cv.lightgbm<-function(fix, gena, gend, inbred_phe,y, nfold, seed, CPU) {
+    print("Predict by LightGBM...")
     set.seed(seed + time)
     foldid <- sample(rep(1:nfold, ceiling(n/nfold))[1:n])
-    if (!requireNamespace("randomForest", quietly = TRUE)) {
-      stop("randomForest needed for this function to work. Please install it.", 
+    if (!requireNamespace("lightgbm", quietly = TRUE)) {
+      stop("lightgbm needed for this function to work. Please install it.", 
            call. = FALSE)
     }
-    if (is.null(gend)) {
+    if (is.null(gend)&is.null(inbred_phe)) {
       x <- gena
+    } 
+    else if (is.null(gend)){
+      x <- cbind(gena,inbred_phe)
+    } 
+    else if(is.null(inbred_phe)){
+      x <- cbind(gena,gend)
     }
-    else {
-      x <- cbind(gena, gend)
+    else{
+      x <- cbind(gena,gend,inbred_phe)
     }
     z <- cbind(fix, x)
+	colnames(z)<-NULL
     yobs <- NULL
     yhat <- NULL
     cl.cores <- detectCores()
@@ -437,25 +505,31 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
     }
     cl <- makeCluster(cl.cores)
     registerDoParallel(cl)
-    res <- foreach(k = 1:nfold, .multicombine = TRUE, .combine = "rbind", 
-                   .packages = c("randomForest")) %dopar% {
-                     id1 <- which(foldid != k)
-                     id2 <- which(foldid == k)
-                     x1 <- z[id1, ]
-                     x2 <- z[id2, ]
-                     y1 <- y[id1]
-                     y2 <- y[id2]
-                     fit <- randomForest(x = x1, y = y1, ntree = 500)
-                     ypred <- predict(fit, x2)
-                     yobs <- y2
-                     yhat <- ypred
-                     data.frame(yhat, yobs)
-                   }
-    stopCluster(cl)
+  res <- foreach(k = 1:nfold, .multicombine = TRUE, .combine = "rbind", 
+                 .packages = c("lightgbm")) %dopar% {
+                   id1 <- which(foldid != k)
+                   id2 <- which(foldid == k)
+                   x1 <- z[id1, ]
+                   x2 <- z[id2, ]
+                   y1 <- y[id1]
+                   y2 <- y[id2]
+                   dtrain <- lgb.Dataset(data=x1,label=y1)
+                   params = list(boosting_type = 'gbdt',objective="regression",
+                                 learning_rate=0.03)
+                   fit <- lgb.train(
+                     params = params,   
+                     data = dtrain,  
+                     nrounds = 500 ,
+                     verbose = -1) 
+                   lgb_pred <- predict(fit,x2)
+                   yhat <- lgb_pred
+                   yobs <- y2
+                   data.frame(yhat, yobs)}
+         stopCluster(cl)
     pr2 <- cor(res$yobs, res$yhat)^2
-    print("Predict by RF...ended.")
-    return(pr2)
-  }
+  print("Predict by LightGBM...ended.")
+  print(pr2)
+}			 
   cvres <- NULL
   cvres <- list(cvres)
   k <- NULL
@@ -468,67 +542,67 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
   for (time in 1:nTimes) {
     cat(time)
     n <- length(y)
-    if ((method == "GBLUP") | (method == "BayesB") | (method == 
-                                                      "RKHS") | (method == "PLS") | (method == "LASSO") | 
-        (method == "EN") | (method == "XGBOOST") | (method == 
-                                                    "RF") | (method == "ALL")) {
+    if ((method == "GBLUP") | (method == "BayesB") | (method == "RKHS") | (method == "PLS") | (method == "LASSO") | 
+        (method == "EN") | (method == "XGBoost") |(method ==  "LightGBM")  |(method == "ALL")) {
       if (method == "GBLUP") {
-        cvres[[time]] <- cv.GBLUP(fix, gena, gend, y, 
+        cvres[[time]] <- cv.GBLUP(fix, gena, gend,inbred_phe, y, 
                                   nfold, seed, CPU)
       }
       if (method == "BayesB") {
-        cvres[[time]] <- cv.bayesb(fix, gena, gend, y, 
+        cvres[[time]] <- cv.bayesb(fix, gena, gend,inbred_phe, y, 
                                    nfold, seed, CPU)
       }
       if (method == "RKHS") {
-        cvres[[time]] <- cv.rkhsmk(fix, gena, gend, y, 
+        cvres[[time]] <- cv.rkhsmk(fix, gena, gend,inbred_phe, y, 
                                    nfold, seed, CPU)
       }
       if (method == "PLS") {
-        cvres[[time]] <- cv.pls(fix, gena, gend, y, nfold, 
+        cvres[[time]] <- cv.pls(fix, gena, gend,inbred_phe, y, nfold, 
                                 seed, CPU)
       }
       if (method == "LASSO") {
-        cvres[[time]] <- cv.lasso(fix, gena, gend, y, 
+        cvres[[time]] <- cv.lasso(fix, gena, gend,inbred_phe, y, 
                                   nfold, seed, CPU)
       }
       if (method == "EN") {
-        cvres[[time]] <- cv.elas(fix, gena, gend, y, 
+        cvres[[time]] <- cv.elas(fix, gena, gend,inbred_phe, y, 
                                  nfold, seed, CPU)
       }
-      if (method == "XGBOOST") {
-        cvres[[time]] <- cv.xgboost(fix, gena, gend, 
+      if (method == "XGBoost") {
+        cvres[[time]] <- cv.xgboost(fix, gena, gend,inbred_phe, 
                                     y, nfold, seed, CPU)
       }
-      if (method == "RF") {
-        cvres[[time]] <- cv.rf(fix, gena, gend, y, nfold, 
+      
+	  if (method == "LightGBM") {
+        cvres[[time]] <- cv.lightgbm(fix, gena, gend,inbred_phe, y, nfold, 
                                seed, CPU)
       }
       if (method == "ALL") {
         print("Predict by ALL...")
-        GBLUP <- cv.GBLUP(fix, gena, gend, y, nfold, 
+        GBLUP <- cv.GBLUP(fix, gena, gend,inbred_phe, y, nfold, 
                           seed, CPU)
-        BayesB <- cv.bayesb(fix, gena, gend, y, nfold, 
+        BayesB <- cv.bayesb(fix, gena, gend, inbred_phe,y, nfold, 
                             seed, CPU)
-        RKHS <- cv.rkhsmk(fix, gena, gend, y, nfold, 
+        RKHS <- cv.rkhsmk(fix, gena, gend, inbred_phe,y, nfold, 
                           seed, CPU)
-        PLS <- cv.pls(fix, gena, gend, y, nfold, seed, 
+        PLS <- cv.pls(fix, gena, gend, inbred_phe,y, nfold, seed, 
                       CPU)
-        LASSO <- cv.lasso(fix, gena, gend, y, nfold, 
+        LASSO <- cv.lasso(fix, gena, gend,inbred_phe, y, nfold, 
                           seed, CPU)
-        EN <- cv.elas(fix, gena, gend, y, nfold, seed, 
+        EN <- cv.elas(fix, gena, gend,inbred_phe, y, nfold, seed, 
                       CPU)
-        XGBOOST <- cv.xgboost(fix, gena, gend, y, nfold, 
+        XGBoost <- cv.xgboost(fix, gena, gend, inbred_phe,y, nfold, 
                               seed, CPU)
-        RF <- cv.rf(fix, gena, gend, y, nfold, seed, 
+		LightGBM<-cv.lightgbm(fix, gena, gend,inbred_phe, y, nfold, seed, 
                     CPU)
+							
         cvres[[time]] <- cbind(GBLUP, BayesB, RKHS, PLS, 
-                               LASSO, EN, XGBOOST, RF)
+                               LASSO, EN, XGBoost,LightGBM)
         print("Predict by ALL...ended.")
       }
     }
     else {
-      stop("Please choose a predict method: GBLUP, BayesB, RKHS, PLS, LASSO, EN, XGBOOST, RF.")
+      stop("Please choose a predict method: GBLUP, BayesB, RKHS, PLS, LASSO, EN, XGBoost,LightGBM.")
     }
   }
   res <- do.call(rbind, cvres)
@@ -540,15 +614,13 @@ cv <- function (fix = NULL, gena, gend = NULL, y, method = "GBLUP", drawplot = T
       attr(d,'dimnames') <- NULL
       d <- as.matrix(d)
       d <- apply(d,2,mean)
-      barplot(height = d,names.arg = names,col=mycolor,las=2,ylim = c(0,0.3),xlim=c(0,10),
-              main = 'Trait predictability of 8 methods',ylab = "R2")
+      barplot(height = d,names.arg = names,col=mycolor,las=2,ylim = c(0,max(d)+0.1),xlim=c(0,8),
+              main = 'Trait predictability of 10 methods',ylab = "R2")
       locat <- seq(0.75,9,length.out=8)
       text(locat,d+0.015,round(d,3),cex=0.9)
     }
     plotres(res)
-	
+    
   }
   return(res)
 }
-
-

@@ -8,6 +8,7 @@ cv(
   fix = NULL,
   gena,
   gend = NULL,
+  inbred_phe = NULL,
   y,
   method = "GBLUP",
   drawplot = TRUE,
@@ -24,9 +25,11 @@ cv(
 
 \item{gend}{a matrix (n x m) of domiance genotypes for the training population. Default is NULL.}
 
+\item{inbred_phe}{a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.}
+
 \item{y}{a vector(n x 1) of the phenotypic values.}
 
-\item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBOOST", "RF".
+\item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost","LightGBM".
 Users may select one of these methods or all of them simultaneously with "ALL". Default is "GBLUP".}
 
 \item{drawplot}{when method ="ALL", user may select TRUE for a barplot about eight GS methods. Default is TRUE.}
@@ -60,8 +63,8 @@ gena <- infergen(inbred_gen, hybrid_phe)$add
 gend <- infergen(inbred_gen, hybrid_phe)$dom
 
 ##additive model
-R2<-cv(fix=NULL,gena,gend=NULL,y=hybrid_phe[,3],method ="GBLUP",nfold=5,nTimes=1,seed=1234,CPU=1)
+R2<-cv(fix=NULL,gena,gend=NULL,y=hybrid_phe[,3],inbred_phe=NULL,method ="GBLUP")
 
 ##additive-dominance model
-R2<-cv(fix=NULL,gena,gend,y=hybrid_phe[,3],method ="GBLUP",nfold=5,nTimes=1,seed=1234,CPU=1)}
+R2<-cv(fix=NULL,gena,gend,y=hybrid_phe[,3],inbred_phe=NULL,method ="GBLUP")}
 }
