@@ -1,18 +1,18 @@
 Package: predhy
 Type: Package
 Title: Genomic Prediction of Hybrid Performance
-Version: 2.0.1
+Version: 2.1.0
 Author: Yang Xu, Guangning Yu, Yanru Cui, Shizhong Xu, Chenwu Xu
 Maintainer: Yang Xu <xuyang_89@126.com>
 Description: Performs genomic prediction of hybrid performance using eight GS methods including GBLUP, BayesB, RKHS, PLS, LASSO, Elastic net, LightGBM and XGBoost. It also provides fast cross-validation and mating design scheme for training population (Xu S et al (2016) <doi:10.1111/tpj.13242>; Xu S (2017) <doi:10.1534/g3.116.038059>). 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Depends: R (>= 4.1.0)
 Imports: BGLR, pls, glmnet, xgboost, lightgbm, foreach, doParallel,
         parallel
 NeedsCompilation: no
-Packaged: 2024-02-04 11:16:27 UTC; Administrator
+Packaged: 2024-03-29 04:11:16 UTC; Administrator
 Repository: CRAN
-Date/Publication: 2024-02-24 23:40:02 UTC
+Date/Publication: 2024-03-29 05:00:02 UTC

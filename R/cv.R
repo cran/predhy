@@ -528,7 +528,7 @@ cv <- function (fix = NULL, gena, gend = NULL,inbred_phe=NULL, y, method = "GBLU
          stopCluster(cl)
     pr2 <- cor(res$yobs, res$yhat)^2
   print("Predict by LightGBM...ended.")
-  print(pr2)
+  return(pr2)
 }			 
   cvres <- NULL
   cvres <- list(cvres)
@@ -614,8 +614,8 @@ cv <- function (fix = NULL, gena, gend = NULL,inbred_phe=NULL, y, method = "GBLU
       attr(d,'dimnames') <- NULL
       d <- as.matrix(d)
       d <- apply(d,2,mean)
-      barplot(height = d,names.arg = names,col=mycolor,las=2,ylim = c(0,max(d)+0.1),xlim=c(0,8),
-              main = 'Trait predictability of 10 methods',ylab = "R2")
+      barplot(height = d,names.arg = names,col=mycolor,las=2,ylim = c(0,max(d)+0.1),xlim=c(0,10),
+              main = 'Trait predictability of 8 methods',ylab = "R2")
       locat <- seq(0.75,9,length.out=8)
       text(locat,d+0.015,round(d,3),cex=0.9)
     }

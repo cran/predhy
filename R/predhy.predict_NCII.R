@@ -31,24 +31,24 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, inbred_phe=NULL,male_na
                              method = "GBLUP", model = "A",select = "top", number = "100"){
   gena <- infergen(inbred_gen, hybrid_phe)$add
   gend <- infergen(inbred_gen, hybrid_phe)$dom
-  if (is.null(inbred_phe)) {
-    return(message("no phenotypic values of inbreds"))
-  }else {
-  inbred_phe <- as.matrix(inbred_phe)}
-  pena <- infergen(inbred_phe, hybrid_phe)$add
-  pend <- infergen(inbred_phe, hybrid_phe)$dom
-  inbredphe<-cbind(pena,pend)
   y <- hybrid_phe[, 3]
   m <- as.character(male_name)
   f <- as.character(female_name)
   inbred_m <- inbred_gen[row.names(inbred_gen) %in% m ,]
   inbred_f <- inbred_gen[row.names(inbred_gen) %in% f ,]
-  inbred_phe_m<-inbred_phe[row.names(inbred_phe) %in% m ,]
-  inbred_phe_f<-inbred_phe[row.names(inbred_phe) %in% f ,]
   predparent_gen_m <- as.matrix(t(inbred_m))
   predparent_gen_f <- as.matrix(t(inbred_f))
+  if (is.null(inbred_phe)) {
+    print(message("no phenotypic values of inbreds"))
+  }else {
+  inbred_phe <- as.matrix(inbred_phe)
+  pena <- infergen(inbred_phe, hybrid_phe)$add
+  pend <- infergen(inbred_phe, hybrid_phe)$dom
+  inbredphe<-cbind(pena,pend)
+  inbred_phe_m<-inbred_phe[row.names(inbred_phe) %in% m ,]
+  inbred_phe_f<-inbred_phe[row.names(inbred_phe) %in% f ,]
   predparent_phe_m <- as.matrix(t(inbred_phe_m))
-  predparent_phe_f <- as.matrix(t(inbred_phe_f))
+  predparent_phe_f <- as.matrix(t(inbred_phe_f))}
   pred_name_m <- colnames(predparent_gen_m)
   pred_name_f <- colnames(predparent_gen_f)
   if ((method == "PLS") | (method == "XGBoost") | (method == "BayesB") | (method ==

@@ -28,16 +28,17 @@
 predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBLUP", model = "A", select = "top", number = "100") {
     gena <- infergen(inbred_gen, hybrid_phe)$add
     gend <- infergen(inbred_gen, hybrid_phe)$dom
+    y <- hybrid_phe[, 3]
 	if (is.null(inbred_phe)) {
-    return(message("no phenotypic values of inbreds"))
+    print(message("no phenotypic values of inbreds"))
   }else {
-  inbred_phe <- as.matrix(inbred_phe)}
+  inbred_phe <- as.matrix(inbred_phe)
 	pena <- infergen(inbred_phe, hybrid_phe)$add
     pend <- infergen(inbred_phe, hybrid_phe)$dom
 	inbredphe<-cbind(pena,pend)
-    y <- hybrid_phe[, 3]
+    
     predparent_phe<-t(inbred_phe)
-    predparent_phe<-as.matrix(predparent_phe)
+    predparent_phe<-as.matrix(predparent_phe)}
     if ((method == "PLS") | (method == "XGBoost") | (method == "BayesB") | (method ==
         "LASSO") | (method == "GBLUP") | (method == "RKHS") | (method == "LightGBM") |
         (method == "EN")) {
