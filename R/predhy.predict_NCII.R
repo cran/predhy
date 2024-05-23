@@ -3,11 +3,10 @@
 #' @param inbred_gen a matrix for genotypes of parental lines in numeric format, coded as 1, 0 and -1. The row.names of inbred_gen must be provied. It can be obtained from the original genotype using  \code{\link{convertgen}} function.
 #' @param hybrid_phe a data frame with three columns. The first column and the second column are the names of male and female parents of the corresponding hybrids, respectively; the third column is the phenotypic values of hybrids.
 #' The names of male and female parents must match the rownames of inbred_gen. Missing (NA) values are not allowed.
-#' @param inbred_phe a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.
+#' @param parent_phe a matrix of a phenotypic values of parent.The names parent_phe must match the rownames of inbred_gen. Default is NULL.
 #' @param male_name a vector of the names of male parents.
 #' @param female_name a vector of the names of female parents.
-#' @param method eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM".
-#' Users may select P of these methods. Default is "GBLUP".
+#' @param method eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM". Users may select one of these methods. Default is "GBLUP".
 #' @param model the prediction model. There are two options: model = "A" for the additive model, model = "AD" for the additive-dominance model,model = "A-P" for the additive-phenotypic model,model = "AD-P" for the additive-dominance-phenotypic model. Default is model = "A".
 #' @param select the selection of hybrids based on the prediction results. There are three options: select = "all", which selects all potential crosses. select = "top", which selects the top n crosses. select = "bottom", which selects the bottom n crosses. The n is determined by the param number.
 #' @param number the number of selected top or bottom hybrids, only when select = "top" or select = "bottom".
@@ -17,17 +16,15 @@
 #' ## load example data from hypred package
 #' data(hybrid_phe)
 #' data(input_geno)
-#' inbred_gen <- convertgen(input_geno, type = "hmp2")
 #'
-#' ## infer the additive and dominance genotypes of hybrids
-#' gena <- infergen(inbred_gen, hybrid_phe)$add
-#' gend <- infergen(inbred_gen, hybrid_phe)$dom
+#' ## convert original genotype
+#' inbred_gen <- convertgen(input_geno, type = "hmp2")
 #'
 #' pred<-predhy.predict_NCII(inbred_gen,hybrid_phe,method="LASSO",model="A")
 #' pred<-predhy.predict_NCII(inbred_gen,hybrid_phe,method="LASSO",model = "AD",select="all")
 #'  }
 #' @export
-predhy.predict_NCII <- function (inbred_gen, hybrid_phe, inbred_phe=NULL,male_name=hybrid_phe[,1],female_name=hybrid_phe[,2],
+predhy.predict_NCII <- function (inbred_gen, hybrid_phe, parent_phe=NULL,male_name=hybrid_phe[,1],female_name=hybrid_phe[,2],
                              method = "GBLUP", model = "A",select = "top", number = "100"){
   gena <- infergen(inbred_gen, hybrid_phe)$add
   gend <- infergen(inbred_gen, hybrid_phe)$dom
@@ -38,15 +35,15 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, inbred_phe=NULL,male_na
   inbred_f <- inbred_gen[row.names(inbred_gen) %in% f ,]
   predparent_gen_m <- as.matrix(t(inbred_m))
   predparent_gen_f <- as.matrix(t(inbred_f))
-  if (is.null(inbred_phe)) {
-    print(message("no phenotypic values of inbreds"))
+  if (is.null(parent_phe)) {
+    print(message("no phenotypic values of parent"))
   }else {
-  inbred_phe <- as.matrix(inbred_phe)
-  pena <- infergen(inbred_phe, hybrid_phe)$add
-  pend <- infergen(inbred_phe, hybrid_phe)$dom
+  parent_phe <- as.matrix(scale(parent_phe))
+  pena <- infergen(parent_phe, hybrid_phe)$add
+  pend <- infergen(parent_phe, hybrid_phe)$dom
   inbredphe<-cbind(pena,pend)
-  inbred_phe_m<-inbred_phe[row.names(inbred_phe) %in% m ,]
-  inbred_phe_f<-inbred_phe[row.names(inbred_phe) %in% f ,]
+  inbred_phe_m<-parent_phe[row.names(parent_phe) %in% m ,]
+  inbred_phe_f<-parent_phe[row.names(parent_phe) %in% f ,]
   predparent_phe_m <- as.matrix(t(inbred_phe_m))
   predparent_phe_f <- as.matrix(t(inbred_phe_f))}
   pred_name_m <- colnames(predparent_gen_m)

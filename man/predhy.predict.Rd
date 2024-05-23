@@ -7,7 +7,7 @@
 predhy.predict(
   inbred_gen,
   hybrid_phe,
-  inbred_phe = NULL,
+  parent_phe = NULL,
   method = "GBLUP",
   model = "A",
   select = "top",
@@ -20,10 +20,9 @@ predhy.predict(
 \item{hybrid_phe}{a data frame with three columns. The first column and the second column are the names of male and female parents of the corresponding hybrids, respectively; the third column is the phenotypic values of hybrids.
 The names of male and female parents must match the rownames of inbred_gen. Missing (NA) values are not allowed.}
 
-\item{inbred_phe}{a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.}
+\item{parent_phe}{a matrix of a phenotypic values of parent.The names parent_phe must match the rownames of inbred_gen. Default is NULL.}
 
-\item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM".
-Users may select P of these methods. Default is "GBLUP".}
+\item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM". Users may select one of these methods. Default is "GBLUP".}
 
 \item{model}{the prediction model. There are four options: model = "A" for the additive model, model = "AD" for the additive-dominance model,model = "A-P" for the additive-phenotypic model,model = "AD-P" for the additive-dominance-phenotypic model. Default is model = "A".}
 
@@ -39,14 +38,12 @@ Predict all potential crosses of a given set of parents using a subset of crosse
 }
 \examples{
 \donttest{
-## load example data from hypred package
+## load example data from predhy package
 data(hybrid_phe)
 data(input_geno)
-inbred_gen <- convertgen(input_geno, type = "hmp2")
 
-## infer the additive and dominance genotypes of hybrids
-gena <- infergen(inbred_gen, hybrid_phe)$add
-gend <- infergen(inbred_gen, hybrid_phe)$dom
+## convert original genotype
+inbred_gen <- convertgen(input_geno, type = "hmp2")
 
 pred<-predhy.predict(inbred_gen,hybrid_phe,method="LASSO",model="A",select="top",number="100")
 pred<-predhy.predict(inbred_gen,hybrid_phe,method="LASSO",model="AD",select="all")

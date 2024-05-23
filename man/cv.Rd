@@ -8,8 +8,8 @@ cv(
   fix = NULL,
   gena,
   gend = NULL,
-  inbred_phe = NULL,
-  y,
+  parent_phe = NULL,
+  hybrid_phe,
   method = "GBLUP",
   drawplot = TRUE,
   nfold = 5,
@@ -25,9 +25,10 @@ cv(
 
 \item{gend}{a matrix (n x m) of domiance genotypes for the training population. Default is NULL.}
 
-\item{inbred_phe}{a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.}
+\item{parent_phe}{a matrix of a phenotypic values of parent.The names parent_phe must match the rownames of inbred_gen. Default is NULL.}
 
-\item{y}{a vector(n x 1) of the phenotypic values.}
+\item{hybrid_phe}{a data frame with three columns. The first column and the second column are the names of male and female parents of the corresponding hybrids, respectively; the third column is the phenotypic values of hybrids.
+The names of male and female parents must match the rownames of inbred_gen. Missing (NA) values are not allowed.}
 
 \item{method}{eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost","LightGBM".
 Users may select one of these methods or all of them simultaneously with "ALL". Default is "GBLUP".}
@@ -51,7 +52,7 @@ The trait predictability is defined as the squared Pearson correlation coefficie
 }
 \examples{
 \donttest{
-## load example data from hypred package
+## load example data from predhy package
 data(hybrid_phe)
 data(input_geno)
 
@@ -63,8 +64,8 @@ gena <- infergen(inbred_gen, hybrid_phe)$add
 gend <- infergen(inbred_gen, hybrid_phe)$dom
 
 ##additive model
-R2<-cv(fix=NULL,gena,gend=NULL,y=hybrid_phe[,3],inbred_phe=NULL,method ="GBLUP")
+R2<-cv(fix=NULL,gena,gend=NULL,parent_phe=NULL,hybrid_phe,method ="GBLUP")
 
 ##additive-dominance model
-R2<-cv(fix=NULL,gena,gend,y=hybrid_phe[,3],inbred_phe=NULL,method ="GBLUP")}
+R2<-cv(fix=NULL,gena,gend,parent_phe=NULL,hybrid_phe,method ="GBLUP")}
 }

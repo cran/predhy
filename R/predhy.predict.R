@@ -3,47 +3,42 @@
 #' @param inbred_gen a matrix for genotypes of parental lines in numeric format, coded as 1, 0 and -1. The row.names of inbred_gen must be provied. It can be obtained from the original genotype using  \code{\link{convertgen}} function.
 #' @param hybrid_phe a data frame with three columns. The first column and the second column are the names of male and female parents of the corresponding hybrids, respectively; the third column is the phenotypic values of hybrids.
 #' The names of male and female parents must match the rownames of inbred_gen. Missing (NA) values are not allowed.
-#' @param inbred_phe a matrix (n x 2) of inbred_phe phenotypic.Default is NULL.
-#' @param method eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM".
-#' Users may select P of these methods. Default is "GBLUP".
+#' @param parent_phe a matrix of a phenotypic values of parent.The names parent_phe must match the rownames of inbred_gen. Default is NULL.
+#' @param method eight GS methods including "GBLUP", "BayesB", "RKHS", "PLS", "LASSO", "EN", "XGBoost", "LightGBM". Users may select one of these methods. Default is "GBLUP".
 #' @param model the prediction model. There are four options: model = "A" for the additive model, model = "AD" for the additive-dominance model,model = "A-P" for the additive-phenotypic model,model = "AD-P" for the additive-dominance-phenotypic model. Default is model = "A".
 #' @param select the selection of hybrids based on the prediction results. There are three options: select = "all", which selects all potential crosses. select = "top", which selects the top n crosses. select = "bottom", which selects the bottom n crosses. The n is determined by the param number.
 #' @param number the number of selected top or bottom hybrids, only when select = "top" or select = "bottom".
 #' @return a data frame of prediction results with two columns. The first column denotes the names of male and female parents of the predicted hybrids, and the second column denotes the phenotypic values of the predicted hybrids.
 #' @examples
 #' \donttest{
-#' ## load example data from hypred package
+#' ## load example data from predhy package
 #' data(hybrid_phe)
 #' data(input_geno)
-#' inbred_gen <- convertgen(input_geno, type = "hmp2")
 #'
-#' ## infer the additive and dominance genotypes of hybrids
-#' gena <- infergen(inbred_gen, hybrid_phe)$add
-#' gend <- infergen(inbred_gen, hybrid_phe)$dom
+#' ## convert original genotype
+#' inbred_gen <- convertgen(input_geno, type = "hmp2")
 #'
 #' pred<-predhy.predict(inbred_gen,hybrid_phe,method="LASSO",model="A",select="top",number="100")
 #' pred<-predhy.predict(inbred_gen,hybrid_phe,method="LASSO",model="AD",select="all")
 #'  }
 #' @export
-predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBLUP", model = "A", select = "top", number = "100") {
+predhy.predict <- function(inbred_gen, hybrid_phe, parent_phe=NULL,method = "GBLUP", model = "A", select = "top", number = "100") {
     gena <- infergen(inbred_gen, hybrid_phe)$add
     gend <- infergen(inbred_gen, hybrid_phe)$dom
     y <- hybrid_phe[, 3]
-	if (is.null(inbred_phe)) {
-    print(message("no phenotypic values of inbreds"))
+	if (is.null(parent_phe)) {
+    print(message("no phenotypic values of parent"))
   }else {
-  inbred_phe <- as.matrix(inbred_phe)
-	pena <- infergen(inbred_phe, hybrid_phe)$add
-    pend <- infergen(inbred_phe, hybrid_phe)$dom
+    parent_phe <- as.matrix(scale(parent_phe))
+	pena <- infergen(parent_phe, hybrid_phe)$add
+    pend <- infergen(parent_phe, hybrid_phe)$dom
 	inbredphe<-cbind(pena,pend)
-    
-    predparent_phe<-t(inbred_phe)
-    predparent_phe<-as.matrix(predparent_phe)}
+    predparent_phe<-as.matrix(t(parent_phe))}
     if ((method == "PLS") | (method == "XGBoost") | (method == "BayesB") | (method ==
         "LASSO") | (method == "GBLUP") | (method == "RKHS") | (method == "LightGBM") |
         (method == "EN")) {
         if (method == "PLS") {
-            predict.pls <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,model = NULL) {
+            predict.pls <- function(inbred_gen, hybrid_phe, parent_phe=NULL,model = NULL) {
                 if (!requireNamespace("pls", quietly = TRUE)) {
                   stop("pls needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -128,25 +123,25 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by PLS...")
             if (model == "A") {
                 print("additive model")
-                predict_pls <- predict.pls(inbred_gen, hybrid_phe,inbred_phe=NULL, model = "A")
+                predict_pls <- predict.pls(inbred_gen, hybrid_phe,parent_phe=NULL, model = "A")
                 Results <- predict_pls	}
 			else if (model == "A-P") {
                 print("additive-phenotypic model")
-                predict_pls <- predict.pls(inbred_gen, hybrid_phe,inbred_phe, model = "A-P")
+                predict_pls <- predict.pls(inbred_gen, hybrid_phe,parent_phe, model = "A-P")
                 Results <- predict_pls}
 			else if (model == "AD-P") {
                 print("additive-dominance-phenotypic model")
-                predict_pls <- predict.pls(inbred_gen, hybrid_phe,inbred_phe, model = "AD-P")
+                predict_pls <- predict.pls(inbred_gen, hybrid_phe,parent_phe, model = "AD-P")
                 Results <- predict_pls}
 			else {
                 print("additive-dominance model")
-                predict_pls <- predict.pls(inbred_gen, hybrid_phe,inbred_phe=NULL, model = "AD")
+                predict_pls <- predict.pls(inbred_gen, hybrid_phe,parent_phe=NULL, model = "AD")
                 Results <- predict_pls
             }
             print("Predict by PLS...ended.")
         }
         if (method == "XGBoost") {
-            predict.xgboost <- function(inbred_gen, hybrid_phe,inbred_phe=NULL,model = NULL) {
+            predict.xgboost <- function(inbred_gen, hybrid_phe,parent_phe=NULL,model = NULL) {
                 if (!requireNamespace("xgboost", quietly = TRUE)) {
                   stop("xgboost needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -251,27 +246,27 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by XGBoost...")
             if (model == "A") {
                 print("additive model")
-                predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "A")
+                predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,parent_phe=NULL,model = "A")
                 Results <- predict_xgboost}
 			else if (model == "A-P") {
                 print("additive-phenotypic model")	
-				predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,inbred_phe,model = "A-P")
+				predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,parent_phe,model = "A-P")
                 Results <- predict_xgboost
             } 
 			else if (model == "AD-P") {
                 print("additive-dominance-phenotypic model")	
-				predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,inbred_phe,model = "AD-P")
+				predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,parent_phe,model = "AD-P")
                 Results <- predict_xgboost
             } 
 			else {
                 print("additive-dominance model")
-                predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "AD")
+                predict_xgboost <- predict.xgboost(inbred_gen, hybrid_phe,parent_phe=NULL,model = "AD")
                 Results <- predict_xgboost
             }
             print("Predict by XGBoost...ended")
         }
         if (method == "BayesB") {
-            predict.bayesb <- function(inbred_gen, hybrid_phe,inbred_phe=NULL,model = NULL) {
+            predict.bayesb <- function(inbred_gen, hybrid_phe,parent_phe=NULL,model = NULL) {
                 if (!requireNamespace("BGLR", quietly = TRUE)) {
                   stop("BGLR needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -378,27 +373,27 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by BayesB...")
             if (model == "A") {
                 print("additive model")
-                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,inbred_phe=NULL, model = "A")
+                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,parent_phe=NULL, model = "A")
                 Results <- predict_bayesb}	
 			else if (model == "A-P") {
                 print("additive-phenotypic model")
-                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,inbred_phe, model = "A-P")
+                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,parent_phe, model = "A-P")
                 Results <- predict_bayesb
             } 
 			 else if(model == "AD-P")  {
 			 print("additive-dominance-phenotypic model")
-                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,inbred_phe, model = "AD-P")
+                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,parent_phe, model = "AD-P")
                 Results <- predict_bayesb
             } 
 			else {
                 print("additive-dominance model")
-                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "AD")
+                predict_bayesb <- predict.bayesb(inbred_gen, hybrid_phe,parent_phe=NULL,model = "AD")
                 Results <- predict_bayesb
             }
             print("Predict by BayesB ...ended")
         }
         if (method == "LASSO") {
-            predict.lasso <- function(inbred_gen, hybrid_phe,inbred_phe=NULL,model = NULL) {
+            predict.lasso <- function(inbred_gen, hybrid_phe,parent_phe=NULL,model = NULL) {
                 if (!requireNamespace("glmnet", quietly = TRUE)) {
                   stop("glmnet needed for this function to work. Please install it.",
                     call. = FALSE)}
@@ -486,27 +481,27 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by LASSO ...")
             if (model == "A") {
                 print("additive model")
-                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,inbred_phe=NULL, model = "A")
+                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,parent_phe=NULL, model = "A")
                 Results <- predict_lasso}
 			else if (model == "A-P") {
                 print("additive-phenotypic model")
-                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,inbred_phe, model = "A-P")
+                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,parent_phe, model = "A-P")
                 Results <- predict_lasso	
             } 
 			else if (model == "AD-P") {
                 print("additive-dominance-phenotypic model")
-                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,inbred_phe, model = "AD-P")
+                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,parent_phe, model = "AD-P")
                 Results <- predict_lasso	
             } 
 			else {
                 print("additive-dominance model")
-                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "AD")
+                predict_lasso <- predict.lasso(inbred_gen, hybrid_phe,parent_phe=NULL,model = "AD")
                 Results <- predict_lasso
             }
             print("Predict by LASSO ...ended")
         }
         if (method == "LightGBM") {
-            predict.lightgbm <- function(inbred_gen, hybrid_phe,inbred_phe=NULL,model = NULL) {
+            predict.lightgbm <- function(inbred_gen, hybrid_phe,parent_phe=NULL,model = NULL) {
                 if (!requireNamespace("lightgbm", quietly = TRUE)) {
                   stop("lightgbm needed for this function to work. Please install it.",
                     call. = FALSE)
@@ -623,28 +618,28 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by LightGBM ...")
             if (model == "A") {
                 print("additive model")
-                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "A")
+                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,parent_phe=NULL,model = "A")
                 Results <- predict_lightgbm
             }
             else if (model == "A-P") {
                 print("additive-phenotypic model")
-                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,inbred_phe,model = "A-P")
+                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,parent_phe,model = "A-P")
                 Results <- predict_lightgbm
             }
             else if (model == "AD-P") {
                 print("additive-dominance-phenotypic model")
-                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,inbred_phe,model = "AD-P")
+                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,parent_phe,model = "AD-P")
                 Results <- predict_lightgbm
             }
 			else {
                 print("additive-dominance model")
-                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "AD")
+                predict_lightgbm <- predict.lightgbm(inbred_gen, hybrid_phe,parent_phe=NULL,model = "AD")
                 Results <- predict_lightgbm
             }
             print("Predict by LightGBM ...ended")
         }
         if (method == "EN") {
-            predict.EN <- function(inbred_gen, hybrid_phe,inbred_phe=NULL,model = NULL) {
+            predict.EN <- function(inbred_gen, hybrid_phe,parent_phe=NULL,model = NULL) {
                 # library(glmnet)
                 predparent_gen <- t(inbred_gen)
                 pred_name <- colnames(predparent_gen)
@@ -729,27 +724,27 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by EN ...")
             if (model == "A") {
                 print("additive model")
-                predict_EN <- predict.EN(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "A")
+                predict_EN <- predict.EN(inbred_gen, hybrid_phe,parent_phe=NULL,model = "A")
                 Results <- predict_EN}
 			else if (model == "A-P") {
                 print("additive-phenotypic model")
-                predict_EN <- predict.EN(inbred_gen, hybrid_phe,inbred_phe,model = "A-P")
+                predict_EN <- predict.EN(inbred_gen, hybrid_phe,parent_phe,model = "A-P")
                 Results <- predict_EN
             } 
 			else if (model == "AD-P") {
                 print("additive-dominance-phenotypic model")
-                predict_EN <- predict.EN(inbred_gen, hybrid_phe,inbred_phe,model = "AD-P")
+                predict_EN <- predict.EN(inbred_gen, hybrid_phe,parent_phe,model = "AD-P")
                 Results <- predict_EN
             } 
 			else {
                 print("additive-dominance model")
-                predict_EN <- predict.EN(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "AD")
+                predict_EN <- predict.EN(inbred_gen, hybrid_phe,parent_phe=NULL,model = "AD")
                 Results <- predict_EN
             }
             print("Predict by EN ...ended")
         }
         if (method == "GBLUP") {
-            predict.GBLUP <- function(fix = NULL, fixnew = NULL, inbred_gen, hybrid_phe,inbred_phe=NULL, model = NULL) {
+            predict.GBLUP <- function(fix = NULL, fixnew = NULL, inbred_gen, hybrid_phe,parent_phe=NULL, model = NULL) {
                 n <- nrow(hybrid_phe)
                 if (model == "AD") {
                   gena <- infergen(inbred_gen, hybrid_phe)[[1]]
@@ -929,31 +924,31 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             if (model == "A") {
                 print("additive model")
                 predict_GBLUP <- predict.GBLUP(fix = NULL, fixnew = NULL, inbred_gen,
-                  hybrid_phe, inbred_phe=NULL,model = "A")
+                  hybrid_phe, parent_phe=NULL,model = "A")
                 Results <- predict_GBLUP
             } 
            else if(model == "A-P") {
                 print("additive-phenotypic model")
                 predict_GBLUP <- predict.GBLUP(fix = NULL, fixnew = NULL, inbred_gen,
-                  hybrid_phe,inbred_phe, model = "A-P")
+                  hybrid_phe,parent_phe, model = "A-P")
                 Results <- predict_GBLUP
             }   
             else if(model == "AD-P") {
                 print("additive-dominance-phenotypic model")
                 predict_GBLUP <- predict.GBLUP(fix = NULL, fixnew = NULL, inbred_gen,
-                  hybrid_phe,inbred_phe, model = "AD-P")
+                  hybrid_phe,parent_phe, model = "AD-P")
                 Results <- predict_GBLUP
             }   
 			else {
                 print("additive-dominance model")
                 predict_GBLUP <- predict.GBLUP(fix = NULL, fixnew = NULL, inbred_gen,
-                  hybrid_phe, inbred_phe=NULL,model = "AD")
+                  hybrid_phe, parent_phe=NULL,model = "AD")
                 Results <- predict_GBLUP
             }
             print("Predict by GBLUP ...ended")
         }
         if (method == "RKHS") {
-            predict.rkhsmk <- function(inbred_gen,hybrid_phe,inbred_phe=NULL,model = NULL) {
+            predict.rkhsmk <- function(inbred_gen,hybrid_phe,parent_phe=NULL,model = NULL) {
                 # library(BGLR)
                 predparent_gen <- t(inbred_gen)
                 pred_name <- colnames(predparent_gen)
@@ -1081,22 +1076,22 @@ predhy.predict <- function(inbred_gen, hybrid_phe, inbred_phe=NULL,method = "GBL
             print("Predict by RKHS ...")
             if (model == "A") {
                 print("additive model")
-                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,inbred_phe=NULL,model = "A")
+                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,parent_phe=NULL,model = "A")
                 Results <- predict_rkhsmk
             }
             else if (model == "A-P") {
                 print("additive-phenotypic model")
-                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,inbred_phe,model = "A-P")
+                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,parent_phe,model = "A-P")
                 Results <- predict_rkhsmk
             }
 			else if (model == "AD-P") {
                 print("additive-dominance-phenotypic model")
-                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,inbred_phe,model = "AD-P")
+                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,parent_phe,model = "AD-P")
                 Results <- predict_rkhsmk
             }
 			else {
                 print("additive-dominance model")
-                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,inbred_phe=NULL, model = "AD")
+                predict_rkhsmk <- predict.rkhsmk(inbred_gen, hybrid_phe,parent_phe=NULL, model = "AD")
                 Results <- predict_rkhsmk
             }
             print("Predict by RKHS ...ended")
