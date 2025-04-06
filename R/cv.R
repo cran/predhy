@@ -1,6 +1,6 @@
 #' @title Evaluate Trait Predictability via Cross Validation
 #' @description The cv function evaluates trait predictability based on eight GS methods via k-fold cross validation.
-#' The trait predictability is defined as the squared Pearson correlation coefficient between the observed and the predicted trait values.
+#' The trait predictability is defined as the squared Pearson correlation coefficient between the observed and the predicted phenotypic values.
 #' @param fix a design matrix of the fixed effects.
 #' @param gena a matrix (n x m) of additive genotypes for the training population.
 #' @param gend a matrix (n x m) of domiance genotypes for the training population. Default is NULL.
@@ -29,10 +29,10 @@
 #' gend <- infergen(inbred_gen, hybrid_phe)$dom
 #'
 #' ##additive model
-#' R2<-cv(fix=NULL,gena,gend=NULL,parent_phe=NULL,hybrid_phe,method ="GBLUP")
+#' R2<-cv(fix=NULL,gena,gend=NULL,parent_phe=NULL,hybrid_phe[,c(1,2,3)],method ="GBLUP")
 #'
 #' ##additive-dominance model
-#' R2<-cv(fix=NULL,gena,gend,parent_phe=NULL,hybrid_phe,method ="GBLUP")}
+#' R2<-cv(fix=NULL,gena,gend,parent_phe=NULL,hybrid_phe[,c(1,2,3)],method ="GBLUP")}
 #' @export
 cv <- function (fix = NULL, gena, gend = NULL,parent_phe=NULL, hybrid_phe, method = "GBLUP", drawplot = TRUE,
                  nfold = 5, nTimes = 1, seed = 1234, CPU = 1) 

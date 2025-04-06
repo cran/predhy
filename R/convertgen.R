@@ -1,5 +1,5 @@
 #' @title Convert Genotype
-#' @description Convert genotypes in HapMap format or in numeric format for hypred package.
+#' @description Convert genotypes in HapMap format or in numeric format for predhy package.
 #' @param input_geno  genotype in HapMap format or in numeric format. The names of individuals should be provided. Missing (NA) values are allowed.
 #' @param type the type of genotype. There are three options: "hmp1" for genotypes in HapMap format with single bit, "hmp2" for genotypes in HapMap format with double bit, and "num" for genotypes in numeric format.
 #' @param missingrate max missing percentage for each SNP, default is 0.2.

@@ -27,7 +27,7 @@ convertgen(
 A matrix of genotypes in numeric format, coded as 1, 0, -1 for AA, Aa, aa. Each row represents an individual and each column represents a marker. The rownames of the matrix are the names of individuals.
 }
 \description{
-Convert genotypes in HapMap format or in numeric format for hypred package.
+Convert genotypes in HapMap format or in numeric format for predhy package.
 }
 \examples{
 ## load genotype in HapMap format with double bit

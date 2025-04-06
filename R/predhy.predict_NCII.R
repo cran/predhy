@@ -508,7 +508,7 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, parent_phe=NULL,male_na
           }else {
             fix <- as.matrix(fix)
           }
-          n1 <- nrow(kd21)
+          n1 <- nrow(ka21)
           if (is.null(fixnew)) {
             fixnew <- matrix(1, n1, 1)
           }else {
@@ -624,7 +624,7 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, parent_phe=NULL,male_na
                        params = params,   
                        data=dtrain,   
                        nrounds = 500 ,
-                       verbose = -1) 
+                       set.seed(123),verbose = -1) 
           for (i in 1:ncol(predparent_gen_m)) {
             ha1 <- t((predparent_gen_m[, i] + predparent_gen_f)/2)
             ha2 <- t(abs((predparent_gen_m[, i] - predparent_gen_f)/2))
@@ -670,7 +670,7 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, parent_phe=NULL,male_na
 		  colnames(x)<-NULL
 		  dtrain <- lgb.Dataset(data=x,label=y)
                      params = list(boosting_type = 'gbdt',objective="regression",
-                                   learning_rate=0.03 )
+                                   learning_rate=0.03,seed=12345)
                      fit <- lgb.train(
                        params = params,   
                        data=dtrain,   
@@ -952,12 +952,12 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, parent_phe=NULL,male_na
       }
 	  else if (model == "A-P") {
          print("additive-phenotypic model")
-		predict_rkhsmk <- predict.rkhsmk(model = "A")
+		predict_rkhsmk <- predict.rkhsmk(model = "A-P")
         Results <- predict_rkhsmk
       } 
 	  else if (model == "AD-P") {
          print("additive-dominance-phenotypic model")
-		predict_rkhsmk <- predict.rkhsmk(model = "A")
+		predict_rkhsmk <- predict.rkhsmk(model = "AD-P")
         Results <- predict_rkhsmk
       } 
       else {
@@ -1068,12 +1068,12 @@ predhy.predict_NCII <- function (inbred_gen, hybrid_phe, parent_phe=NULL,male_na
       }
 	  else if (model == "A-P") {
         print("additive-phenotypic model")
-	    predict_xgboost <- predict.xgboost(model = "A")
+	    predict_xgboost <- predict.xgboost(model = "A-P")
         Results <- predict_xgboost
       }
 	  else if (model == "AD-P") {
         print("additive-dominance-phenotypic model")
-	    predict_xgboost <- predict.xgboost(model = "A")
+	    predict_xgboost <- predict.xgboost(model = "AD-P")
         Results <- predict_xgboost
       }
       else {
